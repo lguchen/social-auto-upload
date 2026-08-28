@@ -1,0 +1,33 @@
+name: Sync Fork dreammis/social-auto-upload
+on:
+  schedule:
+    - cron: '0 8 * * *'   # UTC 08点 = 北京时间16点，每天同步一次
+  workflow_dispatch:      # 支持网页手动点击运行
+
+env:
+  upstream_repo: "dreammis/social-auto-upload"
+  target_branch: "main"
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout my fork repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Git config
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git remote add upstream https://github.com/${{ env.upstream_repo }}.git
+
+      - name: Fetch upstream source repo
+        run: git fetch upstream
+
+      - name: Merge upstream/main into my fork main
+        run: git merge upstream/${{ env.target_branch }} --no-edit
+
+      - name: Push update to my fork
+        run: git push origin ${{ env.target_branch }}
